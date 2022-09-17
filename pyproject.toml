@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "disco-war"
+version = "0.1.0"
+description = ""
+authors = ["StupidHobbit <3mir33@gmail.com>"]
+readme = "README.md"
+packages = [{include = "disco_war"}]
+
+[tool.poetry.scripts]
+disco_war = 'disco_war.main:main'
+
+[tool.poetry.dependencies]
+python = "^3.10"
+w3g = "^1.0.5"
+"discord.py" = "^2.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
