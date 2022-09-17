@@ -24,7 +24,7 @@ jobs:
 
       - name: Build, tag, and push image to Yandex Cloud Container Registry
         env:
-          CR_REGISTRY: stupidhobbit-registry
+          CR_REGISTRY: crp43u6o1hta76svgobv
           CR_REPO: disco-war
           IMAGE_TAG: ${{ github.sha }}
         run: |
