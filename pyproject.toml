@@ -13,6 +13,7 @@ disco_war = 'disco_war.main:main'
 python = "^3.10"
 w3g = "^1.0.5"
 "discord.py" = "^2.0.1"
+redis = "^4.3.4"
 
 [build-system]
 requires = ["poetry-core"]
