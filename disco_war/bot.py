@@ -1,8 +1,10 @@
+import re
 from io import BytesIO
 
 import discord
 from discord.ext import commands
 
+from disco_war.types import Login
 from disco_war.controllers.results_processing import ResultAlreadyProcessed
 from disco_war.markdown import MarkdownBuilder
 from disco_war.parsing import ReplayFileProcessing, ReplayProcessingResult, UnknownReplay
@@ -22,6 +24,10 @@ class SurvivalChaosClient(commands.Bot):
         async def stats(ctx: commands.Context):
             await ctx.send(await self.make_stats_message())
 
+        @self.command()
+        async def add_alias(ctx: commands.Context, alias: str, player: str):
+            await self.configuration.players_controller.add_alias(Login(alias), Login(player))
+
     async def setup_hook(self):
         await self.r.ping()
 
@@ -40,6 +46,11 @@ class SurvivalChaosClient(commands.Bot):
 
     async def on_message(self, message: discord.Message):
         processing = AttachmentProcessing()
+        winner_search = winner_re.search(message.content)
+        if winner_search is None:
+            winner = None
+        else:
+            winner = Login(winner_search.group(1))
         for attachment in message.attachments:
             try:
                 result = await processing.process(attachment)
@@ -48,6 +59,9 @@ class SurvivalChaosClient(commands.Bot):
                 continue
             if result is None:
                 return
+
+            if winner is not None:
+                result.winner = winner
 
             result = await self.configuration.players_controller.normalize_logins(result)
 
@@ -70,3 +84,6 @@ class AttachmentProcessing:
             return None
         file = BytesIO(await attachment.read())
         return await self.file_processing.process(file)
+
+
+winner_re = re.compile(r'\+[\d ]*(\w+)')
