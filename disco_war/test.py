@@ -1,14 +1,17 @@
+import asyncio
+
 import w3g
 
+from disco_war.parsing import ReplayFileProcessing, ReplayProcessingResult, UnknownReplay
 
-#f = w3g.File(r'C:\Users\User\Documents\Warcraft III\Replay\sv_bots.w3g')
-f = w3g.File(r'C:\Users\User\Downloads\surv.w3g')
 
-try:
-    winner = f.player(f.winner())
-except RuntimeError:
-    print("No Winner")
-else:
-    print(winner.name)
+async def  main():
+    f = open(r'C:\Users\User\Documents\Warcraft III\Replay\sc4.w3g', 'rb')
 
-f.print_apm()
+    p = ReplayFileProcessing()
+    result = await p.process(f)
+    print(result)
+
+
+if __name__ == '__main__':
+    asyncio.run(main())

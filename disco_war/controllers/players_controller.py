@@ -34,13 +34,13 @@ class PlayersController:
             await self.players_repository.add_alias(c, AddPlayerAliasOptions(alias=alias, login=player))
 
     async def normalize_logins(self, result: ReplayProcessingResult) -> ReplayProcessingResult:
-        logins = [p.login for p in result.players]
+        logins = [p.login for p in result.players] + [result.winner]
         async with self.context_manager.start() as c:
             login_to_normalized_login = dict(zip(
                 logins,
                 await self.players_repository.normalize_players(c, logins),
             ))
         for p in result.players:
-            p.login = login_to_normalized_login[p.login] or p.login
-        result.winner = login_to_normalized_login[result.winner] or result.winner
+            p.login = login_to_normalized_login.get(p.login) or p.login
+        result.winner = login_to_normalized_login.get(result.winner) or result.winner
         return result
