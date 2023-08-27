@@ -15,6 +15,9 @@ async def main():
         types.Login('dedcannibal'): types.Login('DEDCANNIBAL'),
         types.Login('artes'): types.Login('Artes'),
         types.Login('stupidhobbit'): types.Login('Artes'),
+        types.Login('leo'): types.Login('Leo'),
+        types.Login('lev'): types.Login('Leo'),
+        types.Login('Lev'): types.Login('Leo'),
     }
 
     for alias, player in aliases.items():

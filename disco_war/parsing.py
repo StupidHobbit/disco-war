@@ -7,7 +7,7 @@ import re
 import w3g
 
 from disco_war.markdown import MarkdownBuilder
-from disco_war.types import Login, PlayerID, GameID
+from disco_war.common_types import Login, PlayerID, GameID, GroupDescriptor
 
 
 class UnknownReplay(Exception):
@@ -30,6 +30,10 @@ class ReplayProcessingResult:
     winner: Login | None
     replay_length: str
     id: GameID
+
+    @property
+    def group(self) -> GroupDescriptor:
+        return GroupDescriptor(frozenset(p.login for p in self.players))
 
     def formatted(self) -> str:
         return (MarkdownBuilder(new_line_size=1)

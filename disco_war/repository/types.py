@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Protocol, TypeVar, AsyncContextManager
 
-from disco_war.types import Login, GameName, SURVIVAL_CHAOS, GameID
+from disco_war.common_types import Login, GameName, SURVIVAL_CHAOS, GameID, GroupDescriptor
 
 RepositoryContext = TypeVar('RepositoryContext', bound=AsyncContextManager)
 
@@ -27,7 +27,21 @@ class ChangeIndividualStatsOptions:
 
 
 @dataclass
+class ChangeIndividualGroupStatsOptions:
+    player: Login
+    group: GroupDescriptor
+    amount: int = 1
+    game_name: GameName = SURVIVAL_CHAOS
+
+
+@dataclass
 class AllIndividualStatsOptions:
+    game_name: GameName = SURVIVAL_CHAOS
+
+
+@dataclass
+class GroupIndividualStatsOptions:
+    group: GroupDescriptor
     game_name: GameName = SURVIVAL_CHAOS
 
 
@@ -62,9 +76,12 @@ class AddGameResults:
 class IndividualStatsRepository(Protocol[RepositoryContext]):
     async def add_game_played_for_player(self, context: RepositoryContext, options: ChangeIndividualStatsOptions): ...
     async def add_game_won_for_player(self, context: RepositoryContext, options: ChangeIndividualStatsOptions): ...
+    async def add_game_played_in_group_for_player(self, context: RepositoryContext, options: ChangeIndividualGroupStatsOptions): ...
+    async def add_game_won_in_group_for_player(self, context: RepositoryContext, options: ChangeIndividualGroupStatsOptions): ...
     async def stats(self, context: RepositoryContext, options: AllIndividualStatsOptions) -> list[IndividualStats]: ...
     async def stats_for_player(self, context: RepositoryContext, options: OneIndividualStatsOptions) -> IndividualStats | None: ...
     async def remove_stats(self, context: RepositoryContext, options: OneIndividualStatsOptions): ...
+    async def group_stats(self, context: RepositoryContext, options: GroupIndividualStatsOptions): ...
 
 
 class GamesRepository(Protocol[RepositoryContext]):

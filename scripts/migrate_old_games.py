@@ -9,10 +9,10 @@ async def main():
     r = make_redis()
     configuration = make_redis_based_configuration(r)
     results = {
-        types.Login('Iva'): 4,
-        types.Login('DEDCANNIBAL'): 3,
-        types.Login('ckipen'): 4,
-        types.Login('Artes'): 6,
+        types.Login('Iva'): 7,
+        types.Login('DEDCANNIBAL'): 7,
+        types.Login('ckipen'): 9,
+        types.Login('Artes'): 12,
     }
 
     games_played = sum(results.values())

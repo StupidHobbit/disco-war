@@ -4,11 +4,12 @@ from io import BytesIO
 import discord
 from discord.ext import commands
 
-from disco_war.types import Login
-from disco_war.controllers.results_processing import ResultAlreadyProcessed
+from disco_war.common_types import Login, GroupDescriptor
+from disco_war.controllers.results_processing import ResultAlreadyProcessed, WinnerNotInPlayersException
 from disco_war.markdown import MarkdownBuilder
 from disco_war.parsing import ReplayFileProcessing, ReplayProcessingResult, UnknownReplay
 from disco_war.repository.redis import make_redis
+from disco_war.repository import types
 from disco_war.configuration import make_redis_based_configuration
 
 
@@ -30,16 +31,6 @@ class SurvivalChaosClient(commands.Bot):
 
     async def setup_hook(self):
         await self.r.ping()
-
-    async def make_stats_message(self) -> str:
-        stats = await self.configuration.individual_stats_controller.get()
-        return (MarkdownBuilder(new_line_size=1)
-                .text('```')
-                .table()
-                .with_header(('Игрок', 'Побед', 'Игр сыграно'))
-                .with_rows([(p.login, f'{p.games_won}', f'{p.games_played}') for p in stats])
-                .text('```')
-                .build())
 
     async def on_ready(self):
         print(f'Logged on as {self.user}!')
@@ -70,9 +61,31 @@ class SurvivalChaosClient(commands.Bot):
             except ResultAlreadyProcessed:
                 await message.channel.send(f'Этот реплей (номер {result.id}) уже был обработан')
                 continue
+            except WinnerNotInPlayersException:
+                await message.channel.send(f'Логин победителя ({result.winner}) не найден в реплее карты или алиасах')
+                continue
 
             await message.channel.send(result.formatted())
+            stats = await self.make_group_stats_message(GroupDescriptor(frozenset(p.login for p in result.players)))
+            await message.channel.send(stats)
         await self.process_commands(message)
+
+    async def make_stats_message(self) -> str:
+        stats = await self.configuration.individual_stats_controller.get()
+        return f'Статистика по всем игрокам:\n{self.format_stats_message(stats)}'
+
+    async def make_group_stats_message(self, group: GroupDescriptor) -> str:
+        stats = await self.configuration.individual_stats_controller.get_group(group)
+        return f'Статистика по группе:\n{self.format_stats_message(stats)}'
+
+    def format_stats_message(self, stats: list[types.IndividualStats]) -> str:
+        return (MarkdownBuilder(new_line_size=1)
+                .text('```')
+                .table()
+                .with_header(('Игрок', 'Побед', 'Игр сыграно'))
+                .with_rows([(p.login, f'{p.games_won}', f'{p.games_played}') for p in stats])
+                .text('```')
+                .build())
 
 
 class AttachmentProcessing:
