@@ -113,4 +113,4 @@ HOUR = 3600
 MINUTE = 60
 SURRENDER_MESSAGES = frozenset({'-END'})
 
-map_name_re = re.compile(r'Surv[\d ]*Chaos')
+map_name_re = re.compile(r'.*Surv.*Chaos.*')
