@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from io import IOBase
 import re
 
-import w3g
+from disco_war import w3g
 
 from disco_war.markdown import MarkdownBuilder
 from disco_war.common_types import Login, PlayerID, GameID, GroupDescriptor
