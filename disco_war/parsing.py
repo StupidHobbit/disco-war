@@ -1,5 +1,6 @@
 import sys
-from collections import Counter
+from collections import Counter, defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from io import IOBase
 import re
@@ -22,6 +23,9 @@ class UnknownReplay(Exception):
 class Player:
     login: Login
     apm: float
+    research_cancels: int
+    small_defense_used: int
+    ultimate_used: int
 
 
 @dataclass
@@ -43,8 +47,8 @@ class ReplayProcessingResult:
                 .new_line()
                 .text('```')
                 .table()
-                .with_header(('Игрок', 'APM'))
-                .with_rows([(p.login, f'{p.apm:.2f}') for p in self.players])
+                .with_header(('Игрок', 'APM', 'Исследований отменено', 'Слабых дефов использовано', 'Ультиматумов использовано'))
+                .with_rows([(p.login, f'{p.apm:.2f}', f'{p.research_cancels}', f'{p.small_defense_used}', f'{p.ultimate_used}') for p in self.players])
                 .text('```')
                 .build())
 
@@ -57,15 +61,37 @@ class ReplayFileProcessing:
 
         raw_players: list[w3g.Player] = replay.players
         apm = self.apm(replay)
+        research_cancels = self.count_research_cancels(replay)
+        small_defense_used = self.count_small_defense_used(replay)
+        ultimate_used = self.count_ultimate_used(replay)
         return ReplayProcessingResult(
             players=[Player(
                 p.name,
                 apm[p.id],
+                research_cancels=research_cancels[p.id],
+                small_defense_used=small_defense_used[p.id],
+                ultimate_used=ultimate_used[p.id],
             ) for p in raw_players],
             winner=self.winner(replay),
             replay_length=format_clock(replay.clock),
             id=GameID(int.from_bytes(replay.random_seed, sys.byteorder)),
         )
+
+    def count_research_cancels(self, replay: w3g.File) -> dict[int, int]:
+        return self.count_events(w3g.RemoveUnitFromBuildingQueue, replay)
+
+    def count_small_defense_used(self, replay: w3g.File) -> dict[int, int]:
+        return self.count_events(w3g.AbilityPosition, replay)
+
+    def count_ultimate_used(self, replay: w3g.File) -> dict[int, int]:
+        return self.count_events(w3g.AbilityPositionObject, replay, predicate=lambda e: e.ability != b'\x03\x00\x0D\x00')
+
+    def count_events(self, event_type: type[w3g.Action], replay: w3g.File, predicate: Callable[[w3g.Action], bool] = lambda e: True) -> dict[int, int]:
+        result = defaultdict(int)
+        for e in replay.events:
+            if type(e) is event_type and predicate(e):
+                result[e.player_id] += 1
+        return result
 
     def winner(self, replay: w3g.File) -> Login | None:
         winner_id = self.winner_id(replay)
